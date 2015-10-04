@@ -9,9 +9,9 @@ MODE_COMMAND=0;
 MODE_INSERT=1;
 MODE_ASCII=2;
 MODE_ANNOTATE=3;
-MODE_STRINGS=["Command ",  #These are padded to have same number of spaces.
-              "Insert  ",
-              "ASCII   ",
+MODE_STRINGS=["Command",
+              "Insert",
+              "ASCII",
               "Annotate"];
 class GHVCurses:
     scr=None; #screen
@@ -30,11 +30,11 @@ class GHVCurses:
         self.notes=self.notesarray[0];
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK);
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK);
-        curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK);
+        curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK);
         curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK);
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK);
-        curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_BLACK);
-        curses.init_pair(7, curses.COLOR_BLUE, curses.COLOR_BLACK);
+        curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_BLUE);
+        curses.init_pair(7, curses.COLOR_BLUE, curses.COLOR_WHITE);
         curses.init_pair(8, curses.COLOR_BLACK, curses.COLOR_CYAN);
         curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_WHITE);
         curses.noecho();
@@ -86,8 +86,9 @@ class GHVCurses:
         #self.scr.clear();
         #First we draw the header and footer.
         self.scr.addstr(0,0,
-                        "%08x -- Current Mode: %s" %(
-                self.adr,MODE_STRINGS[self.mode]),
+                        "%08x -- %10s Mode" %(
+                self.adr,MODE_STRINGS[self.mode].strip()
+                ),
                         curses.color_pair(1));
         self.scr.addstr(curses.LINES-2,0,
                         "%-20s" % self.notes.getname());
@@ -137,45 +138,50 @@ class GHVCurses:
     lastkey=0;
     def handlekey(self,key):
         """Handles a keypress."""
-        self.lastkey=key;
         
         #These commands work in any mode.
         if key==curses.KEY_UP:
             self.adr=self.adr-0x10;
-        if key==curses.KEY_DOWN:
+        elif key==curses.KEY_DOWN:
             self.adr=self.adr+0x10;
-        if key==curses.KEY_LEFT:
+        elif key==curses.KEY_LEFT:
             self.adr=self.adr-1;
-        if key==curses.KEY_RIGHT:
+        elif key==curses.KEY_RIGHT:
             self.adr=self.adr+1;
-        if key==0x09: #TAB
+        elif key==0x09: #TAB
             self.notesi=(self.notesi+1) % len(self.notesarray);
             self.notes=self.notesarray[self.notesi];
             self.scr.clear();
-        if key==0x1B: # ESCAPE
-            self.mode=MODE_COMMAND;
+        elif key==0x1B: # ESCAPE
+            if self.lastkey==key:
+                self.mode=MODE_COMMAND;
         
         #Next, handle the mode-specific commands.
-        if self.mode==MODE_COMMAND:
+        elif self.mode==MODE_COMMAND:
             self.handlekeycommand(key);
         elif self.mode==MODE_ASCII:
             self.handlekeyascii(key);
         elif self.mode==MODE_ANNOTATE:
             self.handlekeyannotate(key);
+        
         #Finally, fix the address.
         if self.adr<0:
             self.adr=0;
+        
+        #Save the lastkey.
+        self.lastkey=key;
+
     def handlekeyascii(self,key):
         """Allows for ASCII-style entry."""
         if (key>=0x20 and key<0x7F) or key==0x0a:
             self.src.setbyte(self.adr,key);
             self.adr=self.adr+1;
     def handlekeyannotate(self,key):
-        """Allows for annotations."""
+        """Handles a keypress in annotation mode."""
         if key>=ord('0') and key<=ord('9'):
             self.notes.setcolor(self.adr,
                                 key-ord('0'));
-        if key==ord('n'):
+        elif key==ord('n'):
             note=self.inputbox("Please add a note for 0x%08x"%self.adr,
                                "Adding Annotation");
             self.notes.setnote(self.adr,note);
@@ -183,22 +189,22 @@ class GHVCurses:
         """Handles a key in command mode."""
         if key==ord('q'):
             self.running=False;
-        if key==ord('n'):
+        elif key==ord('n'):
             self.adr=self.adr+0x100;
-        if key==ord('p'):
+        elif key==ord('p'):
             self.adr=self.adr-0x100;
-        if key==ord('N'):
+        elif key==ord('N'):
             self.adr=self.adr+0x1000;
-        if key==ord('P'):
+        elif key==ord('P'):
             self.adr=self.adr-0x1000;
-        if key==ord('i'):
+        elif key==ord('i'):
             # TODO, actually support insert mode.
             self.mode=MODE_INSERT;
-        if key==ord('a'):
+        elif key==ord('a'):
             self.mode=MODE_ANNOTATE;
-        if key==ord('A'):
+        elif key==ord('A'):
             self.mode=MODE_ASCII;
-        if key==ord('g'):
+        elif key==ord('g'):
             goto=self.inputbox("Where would you like to go?\n(Hex, please.)");
             try:
                 self.adr=int(goto,16);

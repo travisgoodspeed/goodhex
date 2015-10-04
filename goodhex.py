@@ -18,11 +18,8 @@ In particular, that rotten scoundrel uses words in weird ways and
 assumes that users will mess with the source code.
 
 usage:
-goodhex file.bin [notes]
+goodhex file.bin
 
-Supported notes include:
-png, zeroes
-file.db
 """
 );
 def main(screen):
@@ -39,10 +36,11 @@ else:
     source=GHSFile(sys.argv[1]);
     #source=GHSFileIhex(sys.argv[1]);
 
-if len(sys.argv)<3:
-    notes=[GHNZeroes(source),GHNSqlite(source)];
-else:
-    notes=[GHNZeroes(source),GHNPng(source)];
+#if len(sys.argv)<3:
+#    notes=[GHNZeroes(source),GHNSqlite(source)];
+#else:
+#    notes=[GHNZeroes(source),GHNPng(source)];
 
+notes=[GHNSqlite(source),GHNZeroes(source)];
 wrapper(main);
 

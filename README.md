@@ -3,10 +3,11 @@ GoodHex, a Good (enough) Hex Editor
 
 by Travis Goodspeed
 
-This is a quick attempt at a hex editor in python, mostly because I'm
-too lazy to learn the internals of Emacs' hexl-mode.  I'm more
-interested in annotations and overlays than in gigantic filesizes, and
-I don't expect this to be of use to anyone else.
+This is a quick and dirty tool that I use for annotating and
+color-coding binary files, mostly because I'm too lazy to learn the
+internals of Emacs' hexl-mode.  I'm more interested in annotations and
+overlays than in gigantic filesizes, and I don't expect this to be of
+use to anyone else.
 
 
 
@@ -31,8 +32,8 @@ built-in.
 For interactive note taking, annotations allow the user to mark bytes
 and ranges with color coding and text notes.  For example, a user
 might want to mark particular ranges that disagree with the parsers.
-These are stored in a SQLite database, for ease of parsing by other
-file formats.
+These are stored in a SQLite database in the current working
+directory, for ease of parsing by other file formats.
 
 
 
@@ -64,6 +65,7 @@ TAB     -- Advance to the next set of Notes.
 Command Mode:
 n/p     -- Move by 0x0100 bytes.
 N/P     -- Move by 0x1000 bytes.
+g       -- Go to an explicit address.
 q       -- Quit.
 i       -- Insert Mode
 a       -- Annotation Mode
