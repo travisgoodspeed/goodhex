@@ -41,11 +41,11 @@ Urgent TODO
 
 The following things are needed before any sort of public release.
 
-(1) Proper command-line argument parsing.
-(2) Parsers for a few file formats.  (Not shotgun!)
-(3) Page up, Page down.
-(4) ^D to exit.
-(5) Corkami examples
+* Proper command-line argument parsing.
+* Parsers for a few file formats.  (Not shotgun!)
+* Page up, Page down.
+* ^D to exit.
+* Corkami examples
 
 
 Key Commands
@@ -55,6 +55,7 @@ Keys are arranged in a series of modes, somewhat like vi but written
 by an emacs user.  The default mode is Command Mode, which can always
 be reached by pressing ESC twice.
 
+```
 All Modes:
 Arrows  -- Move by one or sixteen bytes.
 ESC ESC -- Back to Command Mode
@@ -80,5 +81,4 @@ Annotate Mode:
 0-9     -- Colors the given byte.
 s       -- Annotates the byte with a known structure.
 n       -- Adds a text note to the byte.
-
-
+```
