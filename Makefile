@@ -1,5 +1,6 @@
 
 
-
+all:
+	@echo "It's just a python script."
 make link:
-	sudo ln -s `pwd`/goodhex.py /usr/local/bin/goodhex
+	ln -s `pwd`/goodhex.py /usr/local/bin/goodhex
