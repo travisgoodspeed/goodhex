@@ -20,6 +20,8 @@ class GHVCurses:
     notesi=0;
     notesarray=[];
     adr=0; # Current address
+    marker=None
+    isbytemarking=False
     def __init__(self,screen,source,notesarray):
         """Initializes the curses view.  Be sure to call this in
         curses.wrapper()"""
@@ -68,6 +70,15 @@ class GHVCurses:
         
         self.scr.clear();
         return box.gather();
+    def togglebytemark(self):
+        if self.isbytemarking:
+            #we were byte marking, so stop it
+            self.marker = None
+        else:
+            #we weren't byte marking, so do it
+            self.marker = self.adr
+
+        self.isbytemarking = not self.isbytemarking
 
     def mainloop(self):
         """Main loop of the curses gui."""
@@ -82,23 +93,34 @@ class GHVCurses:
         return notes[0];
     def updateview(self):
         """Updates the view from the current location."""
-        
-        #self.scr.clear();
         #First we draw the header and footer.
+        self.drawheader()
+        self.drawfooter()
+
+        #Then we draw the bytes.
+        self.drawbytes();
+        self.scr.refresh();
+
+    def drawheader(self):
+        mode=MODE_STRINGS[self.mode].strip()
         self.scr.addstr(0,0,
-                        "%08x -- %10s Mode" %(
-                self.adr,MODE_STRINGS[self.mode].strip()
-                ),
+                        "%08x -- %10s Mode" % (self.adr,mode),
                         curses.color_pair(1));
+        if self.isbytemarking:
+            self.scr.addstr(1,0,
+                            "Marker @ %08x -- Distance: %08x" %
+                            (self.marker,abs(self.marker-self.adr)),
+                            curses.color_pair(1));
+        else:
+            self.scr.addstr(1,0," "*80)
+
+
+    def drawfooter(self):
         self.scr.addstr(curses.LINES-2,0,
                         "%-20s" % self.notes.getname());
         
         self.scr.addstr(curses.LINES-1,0,
                         "%-80s" % self.getshortnote(self.adr));
-        
-        #Then we draw the bytes.
-        self.drawbytes();
-        self.scr.refresh();
     def drawbytes(self):
         """Draws bytes on the screen."""
         start=self.adr&~0xFF;
@@ -118,6 +140,7 @@ class GHVCurses:
             # Fetch the color from the notes.
             color=self.notes.getcolor(adr,b,self.adr);
             if adr==self.adr: color=9;
+            if adr==self.marker: color=6;
             
             self.scr.addstr(row,15+(adr&0x0F)*3+((adr&0x08)>>3),
                             s,
@@ -148,6 +171,8 @@ class GHVCurses:
             self.adr=self.adr-1;
         elif key==curses.KEY_RIGHT:
             self.adr=self.adr+1;
+        elif key==0x20:
+            self.togglebytemark()
         elif key==0x09: #TAB
             self.notesi=(self.notesi+1) % len(self.notesarray);
             self.notes=self.notesarray[self.notesi];
@@ -179,8 +204,13 @@ class GHVCurses:
     def handlekeyannotate(self,key):
         """Handles a keypress in annotation mode."""
         if key>=ord('0') and key<=ord('9'):
-            self.notes.setcolor(self.adr,
-                                key-ord('0'));
+            if self.isbytemarking:
+                for i in range(min(self.marker, self.adr),
+                               max(self.marker,self.adr)+1):
+                    self.notes.setcolor(i, key-ord('0'))
+            else:
+                self.notes.setcolor(self.adr,
+                                    key-ord('0'));
         elif key==ord('n'):
             note=self.inputbox("Please add a note for 0x%08x"%self.adr,
                                "Adding Annotation");
